@@ -47,6 +47,11 @@ After training the YOLOv8 Nano model for 25 epochs, the following evaluation met
 
 These metrics indicate that the model performs reasonably well at detecting potholes, especially considering the lightweight nature of the Nano model and the short training duration.
 
+## Example
+Below is an example output from the model (inference result):
+
+![Model output example](example.png)
+
 ## 5. Installation
 Quick setup to run the app locally:
 
