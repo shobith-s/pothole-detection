@@ -13,7 +13,7 @@ Simply upload an image of a road, and the AI will highlight any potholes it dete
 """)
 
 # Load model
-model_path = '/home/shobiths/projects/pothole/best.pt'
+model_path = 'best.pt'
 @st.cache_resource
 def load_model():
     return YOLO(model_path)
