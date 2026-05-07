@@ -1,9 +1,6 @@
 # Virtual environment
 venv/
 
-# Model weights
-best.pt
-
 # Python artifacts
 __pycache__/
 *.py[cod]
