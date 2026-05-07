@@ -76,19 +76,10 @@ Open the printed local URL (usually http://localhost:8501) in your browser.
 
 ## 7. Model weights
 - Training checkpoint in repo: `best.pt` (6 MB)
-- Note: `best.pt` is currently ignored by `.gitignore`. If you want it tracked, remove the ignore entry or add the file with `git add -f best.pt`.
 
 Recommendations:
 - For a single small file (6 MB) it is acceptable to include it in the repository. For larger or frequently-updated weights use Git LFS or GitHub Releases.
 
 ## 8. Development notes
 - Python: 3.12 recommended.
-- The training notebook is `pothole-train.ipynb` and contains data conversion and training steps.
-- If you committed large model files by accident, use `git rm --cached <file>` and consider `git filter-repo` or `git filter-branch` to purge history.
-
-## 9. Contributing
-- Open an issue or PR describing changes. Add tests or a short demo where possible.
-
-## 10. License & Contact
-- This repository does not include a license file. If you plan to publish, add a `LICENSE` (e.g., MIT) and ensure you have rights to share the model and data.
-- Questions: open an issue or contact the maintainer.
+- The training notebook is `train.ipynb` and contains data conversion and training steps.
