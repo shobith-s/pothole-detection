@@ -1,1 +1,31 @@
+# Virtual environment
 venv/
+
+# Model weights
+best.pt
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Environment files
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Editor
+.vscode/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test/build
+.pytest_cache/
+dist/
+build/
+# Logs
+*.log
