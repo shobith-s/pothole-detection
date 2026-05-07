@@ -46,3 +46,49 @@ After training the YOLOv8 Nano model for 25 epochs, the following evaluation met
 *   **mAP50-95**: `0.5409` (Mean Average Precision from 50% to 95% IoU)
 
 These metrics indicate that the model performs reasonably well at detecting potholes, especially considering the lightweight nature of the Nano model and the short training duration.
+
+## 5. Installation
+Quick setup to run the app locally:
+
+1. Create and activate a virtual environment (recommended):
+
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+2. Install Python dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. (Optional) If you plan to use GPU acceleration with Ultralytics, follow the `ultralytics` docs to install the appropriate CUDA-compatible PyTorch build.
+
+## 6. Running the app
+The project includes a minimal Streamlit app in `app.py`. To run it locally:
+
+```bash
+streamlit run app.py
+```
+
+Open the printed local URL (usually http://localhost:8501) in your browser.
+
+## 7. Model weights
+- Training checkpoint in repo: `best.pt` (6 MB)
+- Note: `best.pt` is currently ignored by `.gitignore`. If you want it tracked, remove the ignore entry or add the file with `git add -f best.pt`.
+
+Recommendations:
+- For a single small file (6 MB) it is acceptable to include it in the repository. For larger or frequently-updated weights use Git LFS or GitHub Releases.
+
+## 8. Development notes
+- Python: 3.12 recommended.
+- The training notebook is `pothole-train.ipynb` and contains data conversion and training steps.
+- If you committed large model files by accident, use `git rm --cached <file>` and consider `git filter-repo` or `git filter-branch` to purge history.
+
+## 9. Contributing
+- Open an issue or PR describing changes. Add tests or a short demo where possible.
+
+## 10. License & Contact
+- This repository does not include a license file. If you plan to publish, add a `LICENSE` (e.g., MIT) and ensure you have rights to share the model and data.
+- Questions: open an issue or contact the maintainer.
