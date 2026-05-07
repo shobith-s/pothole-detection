@@ -7,7 +7,7 @@ This project leverages state-of-the-art computer vision tools and cloud infrastr
 *   **Model**: YOLOv8 Nano (`yolov8n.pt`)
 *   **Language**: Python 3.12
 *   **Environment**: Google Colab (with GPU acceleration via Tesla T4).
-*   **Data Source**: [Kaggle](https://www.kaggle.com/) - Specifically the Annotated Potholes Dataset.
+*   **Data Source**: [Annotated Potholes Dataset on Kaggle](https://www.kaggle.com/datasets/chitholian/annotated-potholes-dataset)
 *   **Libraries**:
     *   `ultralytics`: Model training and inference.
     *   `opencv-python` & `PIL`: Image processing and visualization.
