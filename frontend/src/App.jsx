@@ -230,8 +230,15 @@ function App() {
     formData.append("conf_threshold", "0.01") 
     formData.append("iou_threshold", iouThreshold.toString())
 
+    // Warm up backend first to avoid Render sleep cold-start timing out /detect.
+    try {
+      await fetch("https://pothole-backend-nobi.onrender.com/", { method: "GET" })
+    } catch (_) {
+      // Ignore warm-up failures and let /detect attempt decide fallback behavior.
+    }
+
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 20000)
+    const timeoutId = setTimeout(() => controller.abort(), 90000)
 
     try {
       const res = await fetch("https://pothole-backend-nobi.onrender.com/detect", {
@@ -287,6 +294,7 @@ function App() {
         setLoading(false)
       }, 500)
     } finally {
+      clearTimeout(timeoutId)
       setLoading(false)
     }
   }

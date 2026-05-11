@@ -22,8 +22,15 @@ class DetectionService:
 
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         
-        # Run inference using passed thresholds
-        results = self.model.predict(source=image, conf=conf_threshold, iou=iou_threshold)
+        # Keep inference bounded for free-tier CPU instances.
+        results = self.model.predict(
+            source=image,
+            conf=conf_threshold,
+            iou=iou_threshold,
+            imgsz=640,
+            device="cpu",
+            verbose=False,
+        )
         
         boxes_data = []
         if len(results) > 0 and results[0].boxes:
