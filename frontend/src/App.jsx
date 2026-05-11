@@ -231,7 +231,7 @@ function App() {
     formData.append("iou_threshold", iouThreshold.toString())
 
     try {
-      const res = await fetch("http://localhost:8000/detect", {
+      const res = await fetch("https://pothole-backend-nobi.onrender.com/detect", {
         method: "POST",
         body: formData,
       })
