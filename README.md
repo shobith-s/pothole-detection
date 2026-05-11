@@ -97,6 +97,13 @@ npm run dev
 
 Frontend URL (default): http://localhost:5173
 
+Optional frontend backend URL override (for deployed backend):
+
+```bash
+# frontend/.env
+VITE_API_BASE_URL=https://your-backend-url
+```
+
 ### 4. Use the app
 
 - Open the frontend URL
@@ -181,3 +188,33 @@ Example success response:
     - Lower confidence threshold in Controls
     - Verify uploaded image quality and pothole visibility
     - Confirm model file exists at backend/models/best.pt
+
+## Free Deployment (Vercel + Hugging Face Space)
+
+### Frontend (Vercel)
+
+- Deploy the frontend directory to Vercel
+- Set environment variable in Vercel project settings:
+
+```bash
+VITE_API_BASE_URL=https://<your-space-subdomain>.hf.space
+```
+
+### Backend (Hugging Face Docker Space)
+
+Use Docker deployment in Hugging Face Space and this repository root as source.
+
+- Docker file: Dockerfile
+- CPU-optimized dependency file: backend/requirements-hf.txt
+
+Expected exposed service URL:
+
+```text
+https://<your-space-subdomain>.hf.space
+```
+
+Health check:
+
+```bash
+curl https://<your-space-subdomain>.hf.space/
+```

@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { Copy, Maximize2, ZoomIn, ZoomOut } from 'lucide-react'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://pothole-backend-nobi.onrender.com'
+
 const Toggle = ({ label, checked, onToggle, activeColor = 'bg-[#00E5FF]' }) => (
   <label className="flex items-center justify-between cursor-pointer group w-full gap-3">
     <span className="text-base font-bold uppercase">{label}</span>
@@ -232,7 +234,7 @@ function App() {
 
     // Warm up backend first to avoid Render sleep cold-start timing out /detect.
     try {
-      await fetch("https://pothole-backend-nobi.onrender.com/", { method: "GET" })
+      await fetch(`${API_BASE_URL}/`, { method: "GET" })
     } catch (_) {
       // Ignore warm-up failures and let /detect attempt decide fallback behavior.
     }
@@ -241,7 +243,7 @@ function App() {
     const timeoutId = setTimeout(() => controller.abort(), 90000)
 
     try {
-      const res = await fetch("https://pothole-backend-nobi.onrender.com/detect", {
+      const res = await fetch(`${API_BASE_URL}/detect`, {
         method: "POST",
         body: formData,
         signal: controller.signal,
