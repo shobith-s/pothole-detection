@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Copy, Maximize2, ZoomIn, ZoomOut } from 'lucide-react'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://pothole-backend-nobi.onrender.com'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://shobiths-pothole-backend.hf.space'
 
 const Toggle = ({ label, checked, onToggle, activeColor = 'bg-[#00E5FF]' }) => (
   <label className="flex items-center justify-between cursor-pointer group w-full gap-3">
