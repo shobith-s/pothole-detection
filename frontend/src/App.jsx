@@ -202,13 +202,19 @@ function App() {
   
   const triggerFileInput = () => fileInputRef.current.click()
 
-  const Toggle = ({ label, checked, onChange, activeColor = 'bg-[#00E5FF]' }) => (
-    <label className="flex items-center justify-between cursor-pointer group">
+  const Toggle = ({ label, checked, onToggle, activeColor = 'bg-[#00E5FF]' }) => (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onToggle}
+      className="flex w-full items-center justify-between cursor-pointer group"
+    >
       <span className="text-base font-bold uppercase">{label}</span>
-      <div className={`w-12 h-6 neo-border relative ${checked ? activeColor : 'bg-[#E5E5E5]'}`}>
-        <div className={`absolute top-0 w-6 h-full bg-[#0A0A0A] neo-border border-t-0 border-b-0 ${checked ? 'right-0 border-r-0' : 'left-0 border-l-0 transition-all'}`}></div>
+      <div className={`w-12 h-6 neo-border relative transition-colors ${checked ? activeColor : 'bg-[#E5E5E5]'}`}>
+        <div className={`absolute top-0 w-6 h-full bg-[#0A0A0A] neo-border border-t-0 border-b-0 transition-all ${checked ? 'right-0 border-r-0' : 'left-0 border-l-0'}`}></div>
       </div>
-    </label>
+    </button>
   )
 
   const Slider = ({ label, value, onChange, colorHex }) => (
@@ -263,9 +269,9 @@ function App() {
                 
                 <div className="h-[2px] bg-[#111] w-full"></div>
 
-                <Toggle label="BOUNDING BOXES" checked={showBoxes} onChange={()=>setShowBoxes(!showBoxes)} activeColor="bg-[#00E5FF]" />
-                <Toggle label="CONFIDENCE LABELS" checked={showLabels} onChange={()=>setShowLabels(!showLabels)} activeColor="bg-[#00E5FF]" />
-                <Toggle label="HEATMAP OVERLAY" checked={showHeatmap} onChange={()=>setShowHeatmap(!showHeatmap)} activeColor="bg-[#FF4500]" />
+                <Toggle label="BOUNDING BOXES" checked={showBoxes} onToggle={() => setShowBoxes(v => !v)} activeColor="bg-[#00E5FF]" />
+                <Toggle label="CONFIDENCE LABELS" checked={showLabels} onToggle={() => setShowLabels(v => !v)} activeColor="bg-[#00E5FF]" />
+                <Toggle label="HEATMAP OVERLAY" checked={showHeatmap} onToggle={() => setShowHeatmap(v => !v)} activeColor="bg-[#FF4500]" />
                 
                 <div className="h-[2px] bg-[#111] w-full"></div>
 

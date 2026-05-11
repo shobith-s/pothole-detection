@@ -1,5 +1,7 @@
 # Virtual environment
 venv/
+.venv/
+backend/.venv/
 
 # Python artifacts
 __pycache__/

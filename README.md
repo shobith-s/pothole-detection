@@ -1,90 +1,183 @@
-# Pothole Detection Project Evaluation & Documentation
+# Pothole Detection Dashboard
 
-## 1. Tech Stack & Libraries
-This project leverages state-of-the-art computer vision tools and cloud infrastructure to build an automated pothole detection system.
+Real-time pothole detection system with a FastAPI backend (YOLO inference) and a React dashboard frontend.
 
-*   **Core Framework**: [Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics) - Used for object detection, providing a high-performance, real-time architecture.
-*   **Model**: YOLOv8 Nano (`yolov8n.pt`)
-*   **Language**: Python 3.12
-*   **Environment**: Google Colab (with GPU acceleration via Tesla T4).
-*   **Data Source**: [Annotated Potholes Dataset on Kaggle](https://www.kaggle.com/datasets/chitholian/annotated-potholes-dataset)
-*   **Libraries**:
-    *   `ultralytics`: Model training and inference.
-    *   `opencv-python` & `PIL`: Image processing and visualization.
-    *   `xml.etree.ElementTree`: Parsing XML annotations (Pascal VOC format) to YOLO format.
-    *   `matplotlib`: Plotting training metrics and results.
-    *   `shutil` & `pathlib`: File system management and directory restructuring.
-    *   `streamlit`: For running the web application (`app.py`).
+## Overview
 
-## 2. Project Workflow Diagram
-Below is the step-by-step pipeline executed in the training notebook:
+This project lets you upload road images, run pothole detection using a trained YOLO model, and inspect detections in an interactive dashboard with overlays, thresholds, and logs.
 
-```mermaid
-graph TD
-    A[Install Dependencies: Ultralytics]
-    A --> B[Kaggle Authentication & Dataset Download]
-    B --> C[Data Preprocessing]
-    C --> D[Convert XML to YOLO .txt Labels]
-    D --> E[Create data.yaml config]
-    E --> F[Model Training YOLOv8 Nano, 25 epochs]
-    F --> G[Evaluation]
-    G --> G1[Visualize Training Plots]
-    G1 --> G2[Run Inference on Test Images]
+## Features
+
+- Image upload and preview
+- Pothole detection using Ultralytics YOLO model weights
+- Adjustable confidence and IoU thresholds
+- Bounding box, label, and heatmap overlay controls
+- Detection logs and inference timing metrics
+- Health check endpoint for backend availability
+- Frontend fallback mock detections if backend is unreachable
+
+## Tech Stack
+
+- Backend: FastAPI, Uvicorn, Ultralytics YOLO, Pillow
+- Frontend: React, Vite, Tailwind CSS v4
+- Training: Jupyter notebook workflow in train.ipynb
+- Model artifact: backend/models/best.pt
+
+## Project Structure
+
+```text
+pothole/
+    backend/
+        main.py                # FastAPI app entrypoint
+        api/routes.py          # API routes (/ and /detect)
+        services/inference.py  # YOLO model loading and prediction logic
+        models/best.pt         # Trained model weights
+        requirements.txt       # Backend Python dependencies
+    frontend/
+        src/App.jsx            # Main dashboard UI and control logic
+        src/index.css          # Theme and styling
+        package.json           # Frontend scripts/dependencies
+    train.ipynb              # Model training and dataset prep notebook
+    example.png              # Example output image
 ```
 
-## 3. Training Implementation Details
-*   **Annotation Conversion**: The original dataset provides XML files. We convert these to YOLO format (`<class> <x_center> <y_center> <width> <height>`) normalized between 0 and 1.
-*   **Training Configuration**: We use the YOLOv8 Nano (`yolov8n.pt`) model for efficiency.
-*   **Hyperparameters**: 
-    *   **Epochs**: 25
-    *   **Image Size**: 640px
+## Prerequisites
 
-## 4. Metrics & Performance
-After training the YOLOv8 Nano model for 25 epochs, the following evaluation metrics were achieved on the validation dataset:
+- Python 3.10+
+- Node.js 18+ and npm
+- Git (optional, for cloning)
 
-*   **mAP50**: `0.8223` (Mean Average Precision at 50% IoU)
-*   **mAP50-95**: `0.5409` (Mean Average Precision from 50% to 95% IoU)
+## Setup and Run
 
-These metrics indicate that the model performs reasonably well at detecting potholes, especially considering the lightweight nature of the Nano model and the short training duration.
-
-## Example
-Below is an example output from the model (inference result):
-
-![Model output example](example.png)
-
-## 5. Installation
-Quick setup to run the app locally:
-
-1. Create and activate a virtual environment (recommended):
+### 1. Clone and enter project
 
 ```bash
-python -m venv venv
-source venv/bin/activate
+git clone <your-repo-url>
+cd pothole
 ```
 
-2. Install Python dependencies:
+### 2. Backend setup (FastAPI)
+
+Create and activate a virtual environment:
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+```
+
+Install Python dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3. (Optional) If you plan to use GPU acceleration with Ultralytics, follow the `ultralytics` docs to install the appropriate CUDA-compatible PyTorch build.
-
-## 6. Running the app
-The project includes a minimal Streamlit app in `app.py`. To run it locally:
+Start backend server:
 
 ```bash
-streamlit run app.py
+cd ..
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Open the printed local URL (usually http://localhost:8501) in your browser.
+Backend URL: http://localhost:8000
 
-## 7. Model weights
-- Training checkpoint in repo: `best.pt` (6 MB)
+### 3. Frontend setup (React)
 
-Recommendations:
-- For a single small file (6 MB) it is acceptable to include it in the repository. For larger or frequently-updated weights use Git LFS or GitHub Releases.
+In a new terminal:
 
-## 8. Development notes
-- Python: 3.12 recommended.
-- The training notebook is `train.ipynb` and contains data conversion and training steps.
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend URL (default): http://localhost:5173
+
+### 4. Use the app
+
+- Open the frontend URL
+- Upload an image
+- Click Run Detection
+- Use Controls to toggle overlays and tune thresholds
+
+## API Reference
+
+### GET /
+
+Health check.
+
+Example response:
+
+```json
+{
+    "status": "ok",
+    "message": "Pothole Detection API is running."
+}
+```
+
+### POST /detect
+
+Runs pothole detection on uploaded image.
+
+Form fields:
+
+- file: image file (required)
+- conf_threshold: float, default 0.01
+- iou_threshold: float, default 0.45
+
+Example curl:
+
+```bash
+curl -X POST "http://localhost:8000/detect" \
+    -F "file=@/path/to/image.jpg" \
+    -F "conf_threshold=0.25" \
+    -F "iou_threshold=0.45"
+```
+
+Example success response:
+
+```json
+{
+    "status": "success",
+    "potholes_detected": 2,
+    "boxes": [
+        {
+            "xmin": 120.1,
+            "ymin": 200.4,
+            "xmax": 260.9,
+            "ymax": 320.7,
+            "conf": 0.91
+        }
+    ]
+}
+```
+
+## Model Notes
+
+- Runtime model path: backend/models/best.pt
+- If model loading fails, /detect returns an error indicating model is not loaded
+- For GPU acceleration, install a CUDA-compatible PyTorch build as recommended by Ultralytics docs
+
+## Training Notebook
+
+- Notebook: train.ipynb
+- Contains dataset prep, annotation conversion, YOLO training, and evaluation workflow
+
+## Troubleshooting
+
+- Backend starts but /detect fails with import errors:
+    - Ensure virtual environment is active
+    - Reinstall: pip install -r backend/requirements.txt
+
+- Frontend cannot reach backend:
+    - Ensure backend is running on port 8000
+    - Check browser console/network tab for request errors
+
+- No detections shown:
+    - Lower confidence threshold in Controls
+    - Verify uploaded image quality and pothole visibility
+    - Confirm model file exists at backend/models/best.pt
+
+## Design Assets Folder
+
+The separate folder stitch_pothole_detection_dashboard in your workspace contains Stitch design artifacts (DESIGN.md, code.html, screen.png). It is not used directly by the runtime FastAPI + React app.
