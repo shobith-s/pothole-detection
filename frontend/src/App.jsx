@@ -1,11 +1,37 @@
 import { useState, useRef, useEffect } from 'react'
 
+const Toggle = ({ label, checked, onToggle, activeColor = 'bg-[#00E5FF]' }) => (
+  <label className="flex items-center justify-between cursor-pointer group w-full gap-3">
+    <span className="text-base font-bold uppercase">{label}</span>
+    <span className={`relative flex h-6 w-12 items-center neo-border transition-colors ${checked ? activeColor : 'bg-[#E5E5E5]'}`}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onToggle}
+        className="sr-only"
+      />
+      <span
+        className={`absolute top-0 h-full w-6 bg-[#0A0A0A] neo-border border-t-0 border-b-0 transition-all ${checked ? 'right-0 border-r-0' : 'left-0 border-l-0'}`}
+      />
+    </span>
+  </label>
+)
+
+const Slider = ({ label, value, onChange, colorHex }) => (
+  <div className="flex flex-col gap-2">
+    <div className="flex justify-between items-end">
+      <label className="text-sm font-bold uppercase">{label}</label>
+      <span className="text-xs font-bold bg-[#0A0A0A] px-2 py-1 neo-border" style={{ color: colorHex }}>{value}</span>
+    </div>
+    <input type="range" min="0" max="1" step="0.05" value={value} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full accent-[#0A0A0A] cursor-pointer" />
+  </div>
+)
+
 function App() {
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null)
   const [boxes, setBoxes] = useState([])
   const [loading, setLoading] = useState(false)
-  const [detectCount, setDetectCount] = useState(0)
   const [logs, setLogs] = useState([])
   
   // Settings
@@ -59,7 +85,6 @@ function App() {
         
         // Filter boxes dynamically based on UI slider threshold
         const filteredBoxes = boxes.filter(b => b.conf >= confThreshold);
-        setDetectCount(filteredBoxes.length);
 
         if (showHeatmap) {
             filteredBoxes.forEach(b => {
@@ -75,16 +100,29 @@ function App() {
         }
 
         if (showBoxes) {
-            ctx.strokeStyle = '#FF4500'; // Brutalist Orange
-            ctx.lineWidth = Math.max(3, canvas.width / 250);
-            filteredBoxes.forEach(b => {
-                ctx.strokeRect(b.xmin, b.ymin, b.xmax - b.xmin, b.ymax - b.ymin);
-            });
+          const boxLineWidth = Math.max(5, canvas.width / 180);
+          filteredBoxes.forEach(b => {
+            const width = b.xmax - b.xmin;
+            const height = b.ymax - b.ymin;
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(255, 69, 0, 0.16)';
+            ctx.fillRect(b.xmin, b.ymin, width, height);
+
+            ctx.strokeStyle = '#F5F0E8';
+            ctx.lineWidth = boxLineWidth + 3;
+            ctx.strokeRect(b.xmin, b.ymin, width, height);
+
+            ctx.strokeStyle = '#FF4500';
+            ctx.lineWidth = boxLineWidth;
+            ctx.strokeRect(b.xmin, b.ymin, width, height);
+            ctx.restore();
+          });
         }
 
         if (showLabels) {
             // Scale font size based on image size
-            const fontSize = Math.max(14, canvas.width / 50);
+            const fontSize = Math.max(16, canvas.width / 44);
             ctx.font = `bold ${fontSize}px monospace`;
             ctx.textBaseline = 'top';
             
@@ -93,12 +131,12 @@ function App() {
                 const textWidth = ctx.measureText(text).width;
                 const textHeight = parseInt(ctx.font, 10);
                 
-                // Yellow background badge
-                ctx.fillStyle = '#FFE600'; 
-                ctx.strokeStyle = '#111111';
-                ctx.lineWidth = Math.max(1, canvas.width / 500);
+              // High-contrast badge
+              ctx.fillStyle = '#FFE600';
+              ctx.strokeStyle = '#FF4500';
+              ctx.lineWidth = Math.max(2, canvas.width / 350);
                 const padX = fontSize * 0.4;
-                const padY = fontSize * 0.3;
+              const padY = fontSize * 0.35;
                 
                 ctx.fillRect(b.xmin, b.ymin - textHeight - (padY * 2), textWidth + (padX * 2), textHeight + (padY * 2));
                 ctx.strokeRect(b.xmin, b.ymin - textHeight - (padY * 2), textWidth + (padX * 2), textHeight + (padY * 2));
@@ -124,7 +162,6 @@ function App() {
       setFile(selected)
       setPreview(URL.createObjectURL(selected))
       setBoxes([])
-      setDetectCount(0)
       addLog(`SYSTEM: LOADED ${selected.name}`)
     }
   }
@@ -202,31 +239,6 @@ function App() {
   
   const triggerFileInput = () => fileInputRef.current.click()
 
-  const Toggle = ({ label, checked, onToggle, activeColor = 'bg-[#00E5FF]' }) => (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={onToggle}
-      className="flex w-full items-center justify-between cursor-pointer group"
-    >
-      <span className="text-base font-bold uppercase">{label}</span>
-      <div className={`w-12 h-6 neo-border relative transition-colors ${checked ? activeColor : 'bg-[#E5E5E5]'}`}>
-        <div className={`absolute top-0 w-6 h-full bg-[#0A0A0A] neo-border border-t-0 border-b-0 transition-all ${checked ? 'right-0 border-r-0' : 'left-0 border-l-0'}`}></div>
-      </div>
-    </button>
-  )
-
-  const Slider = ({ label, value, onChange, colorHex }) => (
-    <div className="flex flex-col gap-2">
-      <div className="flex justify-between items-end">
-        <label className="text-sm font-bold uppercase">{label}</label>
-        <span className={`text-xs font-bold bg-[#0A0A0A] px-2 py-1 neo-border`} style={{color: colorHex}}>{value}</span>
-      </div>
-      <input type="range" min="0" max="1" step="0.05" value={value} onChange={(e)=>onChange(parseFloat(e.target.value))} className="w-full accent-[#0A0A0A] cursor-pointer" />
-    </div>
-  )
-  
   return (
     <div className="h-screen flex flex-col font-mono uppercase tracking-tight bg-[#F5F0E8] text-[#111111]">
       {/* Top Nav */}
@@ -393,7 +405,7 @@ function App() {
                              {!log.message.startsWith('├') && !log.message.startsWith('└') && <span className="text-gray-500 mr-2">[{log.time}]</span>}
                              
                              {/* Highlighting hack matching the backend log format */}
-                             {log.message.split('(CONF:').map((part, idx, arr) => {
+                             {log.message.split('(CONF:').map((part, idx) => {
                                  if (idx === 0) return <span key={idx}>{part}</span>;
                                  const confVal = part.split(')')[0];
                                  const color = parseFloat(confVal) > 0.9 ? 'text-green-500' : (parseFloat(confVal) > 0.7 ? 'text-[#FFE600]' : 'text-[#FF4500]');
