@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 function App() {
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null)
-  const [resultImage, setResultImage] = useState(null)
+  const [boxes, setBoxes] = useState([])
   const [loading, setLoading] = useState(false)
   const [detectCount, setDetectCount] = useState(0)
   const [logs, setLogs] = useState([])
@@ -28,6 +28,8 @@ function App() {
   const [timeStr, setTimeStr] = useState("")
 
   const fileInputRef = useRef(null)
+  const imgRef = useRef(null)
+  const canvasRef = useRef(null)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -39,12 +41,89 @@ function App() {
     return () => clearInterval(timer)
   }, [])
 
+  // Canvas Drawing Logic
+  useEffect(() => {
+    if (!canvasRef.current || !imgRef.current || !preview) return;
+    
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const img = imgRef.current;
+
+    const drawOverlays = () => {
+        // Set canvas coordinate system to match original image dimensions exactly
+        if (img.naturalWidth === 0) return;
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Filter boxes dynamically based on UI slider threshold
+        const filteredBoxes = boxes.filter(b => b.conf >= confThreshold);
+        setDetectCount(filteredBoxes.length);
+
+        if (showHeatmap) {
+            filteredBoxes.forEach(b => {
+                const cx = (b.xmin + b.xmax) / 2;
+                const cy = (b.ymin + b.ymax) / 2;
+                const r = Math.max(b.xmax - b.xmin, b.ymax - b.ymin) * 1.2;
+                const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+                grad.addColorStop(0, 'rgba(255, 69, 0, 0.4)'); 
+                grad.addColorStop(1, 'rgba(255, 69, 0, 0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(cx - r, cy - r, r*2, r*2);
+            });
+        }
+
+        if (showBoxes) {
+            ctx.strokeStyle = '#FF4500'; // Brutalist Orange
+            ctx.lineWidth = Math.max(3, canvas.width / 250);
+            filteredBoxes.forEach(b => {
+                ctx.strokeRect(b.xmin, b.ymin, b.xmax - b.xmin, b.ymax - b.ymin);
+            });
+        }
+
+        if (showLabels) {
+            // Scale font size based on image size
+            const fontSize = Math.max(14, canvas.width / 50);
+            ctx.font = `bold ${fontSize}px monospace`;
+            ctx.textBaseline = 'top';
+            
+            filteredBoxes.forEach(b => {
+                const text = `⚠ POTHOLE ${Math.round(b.conf * 100)}%`;
+                const textWidth = ctx.measureText(text).width;
+                const textHeight = parseInt(ctx.font, 10);
+                
+                // Yellow background badge
+                ctx.fillStyle = '#FFE600'; 
+                ctx.strokeStyle = '#111111';
+                ctx.lineWidth = Math.max(1, canvas.width / 500);
+                const padX = fontSize * 0.4;
+                const padY = fontSize * 0.3;
+                
+                ctx.fillRect(b.xmin, b.ymin - textHeight - (padY * 2), textWidth + (padX * 2), textHeight + (padY * 2));
+                ctx.strokeRect(b.xmin, b.ymin - textHeight - (padY * 2), textWidth + (padX * 2), textHeight + (padY * 2));
+                
+                // Deep black sharp text
+                ctx.fillStyle = '#111111';
+                ctx.fillText(text, b.xmin + padX, b.ymin - textHeight - padY);
+            });
+        }
+    };
+
+    if (img.complete) {
+        drawOverlays();
+    } else {
+        img.onload = drawOverlays;
+    }
+
+  }, [boxes, showBoxes, showLabels, showHeatmap, confThreshold, preview]);
+
   const handleFileChange = (e) => {
     const selected = e.target.files[0]
     if (selected) {
       setFile(selected)
       setPreview(URL.createObjectURL(selected))
-      setResultImage(null)
+      setBoxes([])
       setDetectCount(0)
       addLog(`SYSTEM: LOADED ${selected.name}`)
     }
@@ -62,7 +141,12 @@ function App() {
     const startTime = Date.now()
     addLog(`INITIATING TARGETED INFERENCE [${model}]`)
     const formData = new FormData()
-    formData.append("file", file || preview)
+    formData.append("file", file)
+    
+    // We send a low conf threshold to the backend to get all possible detections, 
+    // then allow real-time filtering in the UI via the Canvas logic
+    formData.append("conf_threshold", "0.01") 
+    formData.append("iou_threshold", iouThreshold.toString())
 
     try {
       const res = await fetch("http://localhost:8000/detect", {
@@ -74,14 +158,14 @@ function App() {
       const infTime = Date.now() - startTime
 
       if (data.status === "success") {
-        setResultImage(data.image_base64)
-        setDetectCount(data.potholes_detected)
+        setBoxes(data.boxes || [])
         setMetrics(m => ({ ...m, inference: infTime.toString() }))
         
-        addLog(`FRAME_X: DETECTED ${data.potholes_detected} OBJECTS`, data.potholes_detected > 0 ? 'alert' : 'info')
-        if (data.potholes_detected > 0) {
-            addLog(`└─ POTHOLE (CONF: 0.94) LOC: [102, 45, 150, 80]`, 'alert')
-        }
+        const validBoxes = (data.boxes || []).filter(b => b.conf >= confThreshold)
+        addLog(`FRAME_X: DETECTED ${validBoxes.length} OBJECTS`, validBoxes.length > 0 ? 'alert' : 'info')
+        validBoxes.forEach(b => {
+             addLog(`├─ POTHOLE (CONF: ${b.conf.toFixed(2)}) LOC: [${Math.round(b.xmin)}, ${Math.round(b.ymin)}, ${Math.round(b.xmax)}, ${Math.round(b.ymax)}]`, 'alert')
+        })
       } else {
         alert(data.error || "Failed to scan image.")
         addLog(`ERROR: ${data.error}`, 'error')
@@ -89,19 +173,30 @@ function App() {
     } catch (err) {
       console.error(err)
       
-      // Fallback Mock inference if fastAPI fails
+      // MOCK DATA Fallback
       setTimeout(() => {
         addLog(`API FAILED. USING MOCK INFERENCE.`, 'error')
         const fakeTime = Date.now() - startTime + 50
         setMetrics(m => ({ ...m, inference: fakeTime.toString() }))
-        setDetectCount(2)
-        addLog(`FRAME_X: DETECTED 2 OBJECTS`, 'alert')
-        addLog(`├─ POTHOLE (CONF: 0.94) LOC: [102, 45, 150, 80]`, 'alert')
-        addLog(`└─ POTHOLE (CONF: 0.88) LOC: [210, 110, 250, 140]`, 'alert')
+        
+        // Return boxes relative to whatever size the image is (mock 1000x1000 field)
+        const mockBoxes = [
+            { xmin: 200, ymin: 300, xmax: 420, ymax: 460, conf: 0.94 },
+            { xmin: 500, ymin: 600, xmax: 750, ymax: 700, conf: 0.88 },
+            { xmin: 150, ymin: 100, xmax: 200, ymax: 130, conf: 0.65 } // Filtered easily
+        ];
+        
+        setBoxes(mockBoxes)
+        
+        const validBoxes = mockBoxes.filter(b => b.conf >= confThreshold)
+        addLog(`FRAME_X: DETECTED ${validBoxes.length} OBJECTS`, validBoxes.length > 0 ? 'alert' : 'info')
+        validBoxes.forEach(b => {
+             addLog(`├─ POTHOLE (CONF: ${b.conf.toFixed(2)}) LOC: [${Math.round(b.xmin)}, ${Math.round(b.ymin)}, ${Math.round(b.xmax)}, ${Math.round(b.ymax)}]`, 'alert')
+        })
         setLoading(false)
       }, 500)
     } finally {
-      if (file) setLoading(false)
+      setLoading(false)
     }
   }
   
@@ -116,11 +211,11 @@ function App() {
     </label>
   )
 
-  const Slider = ({ label, value, onChange, color, colorHex }) => (
+  const Slider = ({ label, value, onChange, colorHex }) => (
     <div className="flex flex-col gap-2">
       <div className="flex justify-between items-end">
         <label className="text-sm font-bold uppercase">{label}</label>
-        <span className={`text-xs font-bold bg-[#0A0A0A] text-[${colorHex}] px-2 py-1 neo-border`}>{value}</span>
+        <span className={`text-xs font-bold bg-[#0A0A0A] px-2 py-1 neo-border`} style={{color: colorHex}}>{value}</span>
       </div>
       <input type="range" min="0" max="1" step="0.05" value={value} onChange={(e)=>onChange(parseFloat(e.target.value))} className="w-full accent-[#0A0A0A] cursor-pointer" />
     </div>
@@ -216,30 +311,22 @@ function App() {
                         <button className="w-8 h-8 flex items-center justify-center border-2 border-[#111] bg-white hover:bg-[#00E5FF] shadow-[2px_2px_0px_0px_#111]"><span className="text-lg">⛶</span></button>
                     </div>
                 </div>
-                {/* Main Image Area */}
+                {/* Main Image Area with Canvas Overlay */}
                 <div className="flex-1 bg-[#111111] relative m-3 border-2 border-[#111] overflow-hidden flex items-center justify-center group">
-                    {resultImage ? (
+                    {preview ? (
                          <div className="relative h-full w-full flex items-center justify-center">
-                             <img src={resultImage} alt="Detected Potholes" className="max-h-full max-w-full object-contain" />
-                             {showBoxes && preview && (
-                                 <div className="absolute top-[30%] left-[40%] w-[120px] h-[100px] border-4 border-[#FF4500] bg-[#FF4500]/20 hidden"></div>
-                             )}
-                         </div>
-                    ) : preview ? (
-                         <div className="relative h-full w-full flex items-center justify-center">
-                             <img src={preview} alt="Upload Preview" className="max-h-full max-w-full object-contain opacity-80" />
-                             
-                             {/* Mock Overlays to match requested look if no real results yet */}
-                             {showBoxes && loading && (
-                                <>
-                                  <div className="absolute top-[30%] left-[40%] w-[15%] h-[15%] border-4 border-[#FF4500] bg-[#FF4500]/30 animate-pulse">
-                                      {showLabels && <div className="absolute -top-7 -left-1 bg-[#FFE600] border-2 border-[#111] text-[#111] text-xs font-bold px-2 py-1 whitespace-nowrap">⚠ POTHOLE 94%</div>}
-                                  </div>
-                                  <div className="absolute top-[60%] left-[20%] w-[12%] h-[12%] border-4 border-[#FF4500] bg-[#FF4500]/30 animate-pulse delay-75">
-                                      {showLabels && <div className="absolute -top-7 -left-1 bg-[#FFE600] border-2 border-[#111] text-[#111] text-xs font-bold px-2 py-1 whitespace-nowrap">⚠ POTHOLE 88%</div>}
-                                  </div>
-                                </>
-                             )}
+                             {/* Original Image */}
+                             <img 
+                                ref={imgRef} 
+                                src={preview} 
+                                alt="Upload Preview" 
+                                className="max-h-full max-w-full object-contain" 
+                             />
+                             {/* Fullscreen Canvas mapping naturally to the image */}
+                             <canvas 
+                                ref={canvasRef} 
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-h-full max-w-full object-contain pointer-events-none" 
+                             />
                          </div>
                     ) : (
                         <div className="text-[#00E5FF] opacity-50 flex flex-col items-center">
@@ -299,7 +386,7 @@ function App() {
                          <div key={i} className={`${log.message.startsWith('├') || log.message.startsWith('└') ? 'pl-4' : 'border-l-2 pl-2 border-[#00E5FF]'} ${log.type === 'alert' ? (log.message.includes('ERROR') ? 'text-red-500 border-red-500' : 'text-[#00E5FF] border-[#FF4500]') : 'opacity-70'}`}>
                              {!log.message.startsWith('├') && !log.message.startsWith('└') && <span className="text-gray-500 mr-2">[{log.time}]</span>}
                              
-                             {/* Light syntax highlighting hack for mock data */}
+                             {/* Highlighting hack matching the backend log format */}
                              {log.message.split('(CONF:').map((part, idx, arr) => {
                                  if (idx === 0) return <span key={idx}>{part}</span>;
                                  const confVal = part.split(')')[0];

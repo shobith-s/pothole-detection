@@ -1,6 +1,5 @@
 import os
 import io
-import base64
 from PIL import Image
 from ultralytics import YOLO
 
@@ -17,32 +16,31 @@ class DetectionService:
         else:
             print(f"Warning: Model {self.model_path} not found!")
 
-    def predict(self, image_bytes: bytes, conf_threshold: float = 0.25):
+    def predict(self, image_bytes: bytes, conf_threshold: float = 0.05, iou_threshold: float = 0.45):
         if self.model is None:
             raise ValueError("Model not loaded. Ensure best.pt is in backend/models/.")
 
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         
-        # Run inference
-        results = self.model.predict(source=image, conf=conf_threshold)
+        # Run inference using passed thresholds
+        results = self.model.predict(source=image, conf=conf_threshold, iou=iou_threshold)
         
-        # Return plotted BGR numpy array
-        res_plotted = results[0].plot()
-        
-        # Convert BGR (from OpenCV) to RGB
-        im_rgb = res_plotted[..., ::-1]
-        res_image = Image.fromarray(im_rgb)
-        
-        # Convert output image to base64
-        buffered = io.BytesIO()
-        res_image.save(buffered, format="JPEG", quality=85)
-        img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
-        
-        pothole_count = len(results[0].boxes)
+        boxes_data = []
+        if len(results) > 0 and results[0].boxes:
+            for box in results[0].boxes:
+                b = box.xyxy[0].tolist()
+                conf = float(box.conf[0])
+                boxes_data.append({
+                    "xmin": b[0],
+                    "ymin": b[1],
+                    "xmax": b[2],
+                    "ymax": b[3],
+                    "conf": conf
+                })
         
         return {
-            "potholes_detected": pothole_count,
-            "image_base64": f"data:image/jpeg;base64,{img_base64}"
+            "potholes_detected": len(boxes_data),
+            "boxes": boxes_data
         }
 
 # Instantiate a global service
