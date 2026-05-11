@@ -9,4 +9,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Render backend
-        run: curl -s https://pothole-backend.onrender.com/ || true
+        run: curl -s https://pothole-backend-nobi.onrender.com/ || true
