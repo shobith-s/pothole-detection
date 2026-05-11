@@ -23,6 +23,10 @@ This project lets you upload road images, run pothole detection using a trained 
 - Training: Jupyter notebook workflow in train.ipynb
 - Model artifact: backend/models/best.pt
 
+## Example
+
+![Example](example.png)
+
 ## Project Structure
 
 ```text
