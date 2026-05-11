@@ -230,11 +230,16 @@ function App() {
     formData.append("conf_threshold", "0.01") 
     formData.append("iou_threshold", iouThreshold.toString())
 
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 20000)
+
     try {
       const res = await fetch("https://pothole-backend-nobi.onrender.com/detect", {
         method: "POST",
         body: formData,
+        signal: controller.signal,
       })
+      clearTimeout(timeoutId)
       
       const data = await res.json()
       const infTime = Date.now() - startTime
@@ -257,7 +262,11 @@ function App() {
       
       // MOCK DATA Fallback
       setTimeout(() => {
-        addLog(`API FAILED. USING MOCK INFERENCE.`, 'error')
+        if (err?.name === 'AbortError') {
+          addLog(`API TIMEOUT. USING MOCK INFERENCE.`, 'error')
+        } else {
+          addLog(`API FAILED. USING MOCK INFERENCE.`, 'error')
+        }
         const fakeTime = Date.now() - startTime + 50
         setMetrics(m => ({ ...m, inference: fakeTime.toString() }))
         
