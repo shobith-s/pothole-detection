@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { Copy, Maximize2, ZoomIn, ZoomOut } from 'lucide-react'
 
 const Toggle = ({ label, checked, onToggle, activeColor = 'bg-[#00E5FF]' }) => (
   <label className="flex items-center justify-between cursor-pointer group w-full gap-3">
@@ -21,9 +22,36 @@ const Slider = ({ label, value, onChange, colorHex }) => (
   <div className="flex flex-col gap-2">
     <div className="flex justify-between items-end">
       <label className="text-sm font-bold uppercase">{label}</label>
-      <span className="text-xs font-bold bg-[#0A0A0A] px-2 py-1 neo-border" style={{ color: colorHex }}>{value}</span>
+      <span
+        className="threshold-badge"
+        style={{ background: colorHex === '#00E5FF' ? '#111111' : '#FF4500', color: colorHex === '#00E5FF' ? '#00E5FF' : '#111111' }}
+      >
+        {value}
+      </span>
     </div>
-    <input type="range" min="0" max="1" step="0.05" value={value} onChange={(e) => onChange(parseFloat(e.target.value))} className="w-full accent-[#0A0A0A] cursor-pointer" />
+    <input
+      type="range"
+      min="0"
+      max="1"
+      step="0.05"
+      value={value}
+      onChange={(e) => onChange(parseFloat(e.target.value))}
+      className="slider-input w-full cursor-pointer"
+      style={{
+        background: `linear-gradient(to right, #111 0%, #111 ${value * 100}%, #d0cfc9 ${value * 100}%, #d0cfc9 100%)`,
+        '--thumb-color': colorHex,
+      }}
+    />
+  </div>
+)
+
+const MetricCell = ({ label, value, color, unit = '' }) => (
+  <div className="metrics-cell flex flex-col justify-between bg-[#F5F0E8]">
+    <span className="text-[11px] font-bold text-[#555] uppercase tracking-[0.18em]">{label}</span>
+    <div className="flex items-end gap-1 leading-none">
+      <span className="text-[48px] font-black" style={{ color }}>{value}</span>
+      {unit ? <span className="pb-2 text-[20px] font-bold" style={{ color }}>{unit}</span> : null}
+    </div>
   </div>
 )
 
@@ -33,6 +61,7 @@ function App() {
   const [boxes, setBoxes] = useState([])
   const [loading, setLoading] = useState(false)
   const [logs, setLogs] = useState([])
+  const [uploadCount, setUploadCount] = useState(0)
   
   // Settings
   const [confThreshold, setConfThreshold] = useState(0.75)
@@ -81,7 +110,10 @@ function App() {
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
         
+      ctx.filter = 'none';
+      ctx.globalCompositeOperation = 'source-over';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         
         // Filter boxes dynamically based on UI slider threshold
         const filteredBoxes = boxes.filter(b => b.conf >= confThreshold);
@@ -174,6 +206,7 @@ function App() {
       setFile(selected)
       setPreview(URL.createObjectURL(selected))
       setBoxes([])
+      setUploadCount(prev => prev + 1)
       addLog(`SYSTEM: LOADED ${selected.name}`)
     }
   }
@@ -336,9 +369,9 @@ function App() {
                 <div className="border-b-2 border-[#111] p-3 bg-[#FFE600] flex justify-between items-center">
                     <h2 className="text-xl font-black uppercase text-[#111]">DETECTION VIEWER</h2>
                     <div className="flex gap-2">
-                        <button className="w-8 h-8 flex items-center justify-center border-2 border-[#111] bg-white hover:bg-[#00E5FF] shadow-[2px_2px_0px_0px_#111]"><span className="text-lg">⊕</span></button>
-                        <button className="w-8 h-8 flex items-center justify-center border-2 border-[#111] bg-white hover:bg-[#00E5FF] shadow-[2px_2px_0px_0px_#111]"><span className="text-lg">⊖</span></button>
-                        <button className="w-8 h-8 flex items-center justify-center border-2 border-[#111] bg-white hover:bg-[#00E5FF] shadow-[2px_2px_0px_0px_#111]"><span className="text-lg">⛶</span></button>
+                    <button type="button" className="viewer-icon-btn" aria-label="Zoom in"><ZoomIn size={18} strokeWidth={2.25} /></button>
+                    <button type="button" className="viewer-icon-btn" aria-label="Zoom out"><ZoomOut size={18} strokeWidth={2.25} /></button>
+                    <button type="button" className="viewer-icon-btn" aria-label="Fullscreen"><Maximize2 size={18} strokeWidth={2.25} /></button>
                     </div>
                 </div>
                 {/* Main Image Area with Canvas Overlay */}
@@ -346,11 +379,11 @@ function App() {
                     {preview ? (
                          <div className="relative h-full w-full flex items-center justify-center">
                              {/* Original Image */}
-                             <img 
+                              <img 
                                 ref={imgRef} 
                                 src={preview} 
                                 alt="Upload Preview" 
-                                className="max-h-full max-w-full object-contain" 
+                                className="hidden" 
                              />
                              {/* Fullscreen Canvas mapping naturally to the image */}
                              <canvas 
@@ -371,8 +404,8 @@ function App() {
                             <img src={preview} alt="Thumbnail 1" className="w-full h-full object-cover" />
                         </div>
                     )}
-                    <div className="h-full w-24 bg-[#A3918B] border-2 border-[#111] flex items-center justify-center cursor-pointer shadow-[3px_3px_0px_0px_#111]">
-                        <span className="text-[#F5F0E8] text-xl font-bold tracking-widest">...</span>
+                  <div className="thumbnail-overflow">
+                    <span>{uploadCount > 2 ? `+${uploadCount - 2}` : '...'}</span>
                     </div>
                 </div>
             </div>
@@ -385,23 +418,17 @@ function App() {
                 <div className="border-b-2 border-[#111] p-3 bg-[#FFE600]">
                     <h2 className="text-xl font-black uppercase text-[#111]">METRICS</h2>
                 </div>
-                <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-[2px] bg-[#111]">
-                    <div className="bg-[#F5F0E8] p-3 flex flex-col justify-between">
-                        <span className="text-xs font-bold text-[#111]">MAP50</span>
-                        <span className="text-4xl font-black text-[#FF4500]">{metrics.map50}</span>
-                    </div>
-                    <div className="bg-[#F5F0E8] p-3 flex flex-col justify-between">
-                        <span className="text-xs font-bold text-[#111]">PRECISION</span>
-                        <span className="text-4xl font-black text-[#00E5FF]">{metrics.precision}</span>
-                    </div>
-                    <div className="bg-[#F5F0E8] p-3 flex flex-col justify-between">
-                        <span className="text-xs font-bold text-[#111]">RECALL</span>
-                        <span className="text-4xl font-black text-[#FFE600]">{metrics.recall}</span>
-                    </div>
-                    <div className="bg-[#111111] p-3 flex flex-col justify-between">
-                         <span className="text-xs font-bold text-gray-400">INFERENCE</span>
-                         <span className="text-3xl font-black text-white">{metrics.inference} <span className="text-sm font-bold text-[#00E5FF]">ms</span></span>
-                    </div>
+                <div className="flex-1 metrics-grid bg-[#F5F0E8]">
+                  <MetricCell label="MAP50" value={metrics.map50} color="#FF4500" />
+                  <MetricCell label="PRECISION" value={metrics.precision} color="#00E5FF" />
+                  <MetricCell label="RECALL" value={metrics.recall} color="#FFE600" />
+                  <div className="metrics-cell flex flex-col justify-between bg-[#111111]">
+                     <span className="text-[11px] font-bold text-[#555] uppercase tracking-[0.18em]">INFERENCE</span>
+                     <div className="flex items-end gap-1 leading-none">
+                       <span className="text-[48px] font-black text-white">{metrics.inference}</span>
+                       <span className="pb-2 text-[20px] font-bold text-white">ms</span>
+                     </div>
+                  </div>
                 </div>
             </div>
 
@@ -409,11 +436,13 @@ function App() {
             <div className="bg-[#F5F0E8] border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] flex flex-col flex-1 min-h-0">
                 <div className="border-b-2 border-[#111] p-3 bg-[#111111] flex justify-between items-center">
                     <h2 className="text-lg font-black text-[#FFE600] flex items-center gap-2">LOG</h2>
-                    <span className="text-[#00E5FF] cursor-pointer">⎘</span>
+                  <button type="button" className="log-copy-btn" aria-label="Copy logs">
+                    <Copy size={20} strokeWidth={2.25} />
+                  </button>
                 </div>
                 <div className="flex-1 bg-[#0A0A0A] p-3 overflow-y-auto font-mono text-[12px] leading-tight text-[#00E5FF] space-y-2 flex flex-col">
                     {logs.map((log, i) => (
-                         <div key={i} className={`${log.message.startsWith('├') || log.message.startsWith('└') ? 'pl-4' : 'border-l-2 pl-2 border-[#00E5FF]'} ${log.type === 'alert' ? (log.message.includes('ERROR') ? 'text-red-500 border-red-500' : 'text-[#00E5FF] border-[#FF4500]') : 'opacity-70'}`}>
+                     <div key={i} className={`log-entry ${log.message.startsWith('├') || log.message.startsWith('└') ? 'pl-4' : 'border-l-2 pl-2 border-[#00E5FF]'} ${log.type === 'alert' ? (log.message.includes('ERROR') ? 'text-red-500 border-red-500' : 'text-[#00E5FF] border-[#FF4500]') : 'opacity-70'}`}>
                              {!log.message.startsWith('├') && !log.message.startsWith('└') && <span className="text-gray-500 mr-2">[{log.time}]</span>}
                              
                              {/* Highlighting hack matching the backend log format */}
