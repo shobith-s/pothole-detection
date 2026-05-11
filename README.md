@@ -181,7 +181,3 @@ Example success response:
     - Lower confidence threshold in Controls
     - Verify uploaded image quality and pothole visibility
     - Confirm model file exists at backend/models/best.pt
-
-## Design Assets Folder
-
-The separate folder stitch_pothole_detection_dashboard in your workspace contains Stitch design artifacts (DESIGN.md, code.html, screen.png). It is not used directly by the runtime FastAPI + React app.
