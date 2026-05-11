@@ -205,7 +205,7 @@ VITE_API_BASE_URL=https://<your-space-subdomain>.hf.space
 Use Docker deployment in Hugging Face Space and this repository root as source.
 
 - Docker file: Dockerfile
-- CPU-optimized dependency file: backend/requirements-hf.txt
+- Single backend requirements file: backend/requirements.txt
 
 Expected exposed service URL:
 

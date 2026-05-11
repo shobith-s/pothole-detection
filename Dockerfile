@@ -7,8 +7,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY backend/requirements-hf.txt /app/backend/requirements-hf.txt
-RUN pip install --upgrade pip && pip install -r /app/backend/requirements-hf.txt
+COPY backend/requirements.txt /app/backend/requirements.txt
+RUN pip install --upgrade pip && pip install -r /app/backend/requirements.txt
 
 COPY backend /app/backend
 
