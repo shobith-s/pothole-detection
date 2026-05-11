@@ -124,26 +124,38 @@ function App() {
             // Scale font size based on image size
             const fontSize = Math.max(16, canvas.width / 44);
             ctx.font = `bold ${fontSize}px monospace`;
-            ctx.textBaseline = 'top';
+          ctx.textBaseline = 'top';
             
             filteredBoxes.forEach(b => {
                 const text = `⚠ POTHOLE ${Math.round(b.conf * 100)}%`;
                 const textWidth = ctx.measureText(text).width;
                 const textHeight = parseInt(ctx.font, 10);
                 
-              // High-contrast badge
-              ctx.fillStyle = '#FFE600';
-              ctx.strokeStyle = '#FF4500';
-              ctx.lineWidth = Math.max(2, canvas.width / 350);
-                const padX = fontSize * 0.4;
-              const padY = fontSize * 0.35;
-                
-                ctx.fillRect(b.xmin, b.ymin - textHeight - (padY * 2), textWidth + (padX * 2), textHeight + (padY * 2));
-                ctx.strokeRect(b.xmin, b.ymin - textHeight - (padY * 2), textWidth + (padX * 2), textHeight + (padY * 2));
-                
-                // Deep black sharp text
-                ctx.fillStyle = '#111111';
-                ctx.fillText(text, b.xmin + padX, b.ymin - textHeight - padY);
+            const padX = fontSize * 0.35;
+            const padY = fontSize * 0.28;
+            const badgeWidth = textWidth + (padX * 2);
+            const badgeHeight = textHeight + (padY * 2);
+
+            let badgeX = b.xmin + 6;
+            let badgeY = b.ymin + 6;
+
+            if (badgeX + badgeWidth > b.xmax - 6) {
+              badgeX = Math.max(b.xmin + 6, b.xmax - badgeWidth - 6);
+            }
+
+            if (badgeY + badgeHeight > b.ymax - 6) {
+              badgeY = Math.max(b.ymin + 6, b.ymax - badgeHeight - 6);
+            }
+
+            ctx.fillStyle = '#0A0A0A';
+            ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
+
+            ctx.strokeStyle = '#FFE600';
+            ctx.lineWidth = Math.max(2, canvas.width / 380);
+            ctx.strokeRect(badgeX, badgeY, badgeWidth, badgeHeight);
+
+            ctx.fillStyle = '#FFE600';
+            ctx.fillText(text, badgeX + padX, badgeY + padY);
             });
         }
     };
