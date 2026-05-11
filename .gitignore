@@ -25,4 +25,5 @@ Thumbs.db
 dist/
 build/
 # Logs
-*.log
+
+.mcp.json
