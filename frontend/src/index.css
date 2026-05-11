@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #FF3D00;
+  --color-accent-blue: #00E5FF;
+  --color-accent-yellow: #FFEB3B;
+  --color-surface: #FFFBE6;
+  --color-deep-black: #0A0A0A;
+  --color-text-off: #291712;
+
+  --font-sg: "Space Grotesk", sans-serif;
+  
+  --spacing-unit: 8px;
+  --spacing-gutter: 24px;
+  --spacing-margin: 40px;
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-deep-black font-sg uppercase;
+    margin: 0;
+    min-height: 100vh;
+  }
+  
+  /* Neo Brutalism utilities */
+  .neo-border {
+    @apply border-3 border-deep-black;
+  }
+  
+  .neo-shadow {
+    box-shadow: 5px 5px 0px 0px #0A0A0A;
+  }
+  
+  .neo-shadow-hover:hover {
+    box-shadow: 2px 2px 0px 0px #0A0A0A;
+    transform: translate(3px, 3px);
+  }
+}
