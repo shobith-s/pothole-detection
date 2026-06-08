@@ -127,12 +127,26 @@
   }
 
   .metrics-grid {
-    display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
     border-left: 2px solid #111;
     border-top: 2px solid #111;
     height: 100%;
+  }
+
+  @media (max-width: 767px) {
+    .metrics-grid {
+      display: none;
+    }
+    .metrics-grid.visible {
+      display: grid;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .metrics-grid {
+      display: grid;
+    }
   }
 
   .metrics-cell {
@@ -218,6 +232,13 @@
       width: 60px;
       height: 45px;
       font-size: 12px;
+    }
+  }
+
+  /* Show metrics grid on desktop (md:block won't work with grid display) */
+  @media (min-width: 768px) {
+    .metrics-grid[style*="display: none"] {
+      display: grid !important;
     }
   }
 }

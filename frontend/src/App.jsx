@@ -81,6 +81,10 @@ function App() {
     inference: '0'
   })
 
+  // Mobile UI State - Controls/Metrics Toggle
+  const [showControls, setShowControls] = useState(true)
+  const [showMetrics, setShowMetrics] = useState(false)
+
   // Clock
   const [timeStr, setTimeStr] = useState("")
 
@@ -209,6 +213,8 @@ function App() {
       setPreview(URL.createObjectURL(selected))
       setBoxes([])
       setUploadCount(prev => prev + 1)
+      setShowControls(true)
+      setShowMetrics(false)
       addLog(`SYSTEM: LOADED ${selected.name}`)
     }
   }
@@ -256,6 +262,8 @@ function App() {
       if (data.status === "success") {
         setBoxes(data.boxes || [])
         setMetrics(m => ({ ...m, inference: infTime.toString() }))
+        setShowControls(false)
+        setShowMetrics(true)
         
         const validBoxes = (data.boxes || []).filter(b => b.conf >= confThreshold)
         addLog(`FRAME_X: DETECTED ${validBoxes.length} OBJECTS`, validBoxes.length > 0 ? 'alert' : 'info')
@@ -278,6 +286,8 @@ function App() {
         }
         const fakeTime = Date.now() - startTime + 50
         setMetrics(m => ({ ...m, inference: fakeTime.toString() }))
+        setShowControls(false)
+        setShowMetrics(true)
         
         // Return boxes relative to whatever size the image is (mock 1000x1000 field)
         const mockBoxes = [
@@ -332,15 +342,117 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col lg:flex-row p-2 sm:p-4 gap-2 sm:gap-4 overflow-hidden bg-[#F5F0E8]">
+      <main className="flex-1 flex flex-col md:flex-row p-2 sm:p-4 gap-2 sm:gap-4 overflow-hidden bg-[#F5F0E8]">
         
-        {/* Left Column: Controls */}
-        <aside className="w-full lg:w-[280px] flex flex-col lg:h-full lg:overflow-y-auto max-h-[40vh] lg:max-h-none">
+        {/* VIEWER - First on mobile (order-1), center on desktop (lg:order-2) */}
+        <section className="flex-1 flex flex-col md:order-2 h-auto md:h-full min-w-0 min-h-[35vh] md:min-h-0 order-1">
           <div className="bg-[#F5F0E8] border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] flex flex-col h-full">
-            <div className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#FFE600]">
-                <h2 className="text-lg sm:text-xl font-black uppercase text-[#111]">CONTROLS</h2>
+            <div className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#FFE600] flex justify-between items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-black uppercase text-[#111] truncate">DETECTION VIEWER</h2>
+                <div className="flex gap-1 flex-shrink-0">
+                <button type="button" className="viewer-icon-btn w-6 h-6 sm:w-8 sm:h-8" aria-label="Zoom in"><ZoomIn size={14} strokeWidth={2.25} className="sm:w-full sm:h-full" style={{width: '16px', height: '16px'}} /></button>
+                <button type="button" className="viewer-icon-btn w-6 h-6 sm:w-8 sm:h-8" aria-label="Zoom out"><ZoomOut size={14} strokeWidth={2.25} className="sm:w-full sm:h-full" style={{width: '16px', height: '16px'}} /></button>
+                <button type="button" className="viewer-icon-btn w-6 h-6 sm:w-8 sm:h-8" aria-label="Fullscreen"><Maximize2 size={14} strokeWidth={2.25} className="sm:w-full sm:h-full" style={{width: '16px', height: '16px'}} /></button>
+                </div>
             </div>
-            <div className="p-2 sm:p-4 flex flex-col gap-3 sm:gap-6 flex-1 bg-[#F5F0E8] overflow-y-auto">
+            {/* Main Image Area with Canvas Overlay */}
+            <div className="flex-1 bg-[#111111] relative m-1 sm:m-3 border-2 border-[#111] overflow-hidden flex items-center justify-center group">
+                {preview ? (
+                     <div className="relative h-full w-full flex items-center justify-center">
+                         {/* Original Image */}
+                          <img 
+                            ref={imgRef} 
+                            src={preview} 
+                            alt="Upload Preview" 
+                            className="hidden" 
+                         />
+                         {/* Fullscreen Canvas mapping naturally to the image */}
+                         <canvas 
+                            ref={canvasRef} 
+                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-h-full max-w-full object-contain pointer-events-none" 
+                         />
+                     </div>
+                ) : (
+                    <div className="text-[#00E5FF] opacity-50 flex flex-col items-center">
+                        <p className="text-xl font-bold uppercase border-2 border-[#00E5FF] p-4 bg-[#00E5FF]/10">AWAITING TARGET FEED</p>
+                    </div>
+                )}
+            </div>
+            {/* Thumbnails Placeholder */}
+            <div className="h-16 sm:h-24 border-t-2 border-[#111] bg-[#FFB4A2]/50 p-2 sm:p-3 flex gap-2 sm:gap-3 overflow-x-auto">
+                {preview && (
+                    <div className="h-full aspect-video bg-[#111] border-2 border-[#FF4500] relative cursor-pointer opacity-100 shadow-[3px_3px_0px_0px_#111] flex-shrink-0">
+                        <img src={preview} alt="Thumbnail 1" className="w-full h-full object-cover" />
+                    </div>
+                )}
+              <div className="thumbnail-overflow text-xs sm:text-base">
+                <span>{uploadCount > 2 ? `+${uploadCount - 2}` : '...'}</span>
+                </div>
+            </div>
+          </div>
+        </section>
+
+        {/* METRICS - Second on mobile (order-2), right on desktop (md:order-3) */}
+        <aside className="w-full md:w-[280px] flex flex-col gap-2 sm:gap-4 md:h-full md:overflow-hidden order-2 md:order-3">
+            {/* Metrics Card - Collapsible on mobile */}
+            <div className="bg-[#F5F0E8] border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] flex flex-col shrink-0 lg:flex-[0.7]">
+                <button type="button" onClick={() => setShowMetrics(!showMetrics)} className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#FFE600] hover:bg-[#FFD700] transition-colors flex justify-between items-center w-full text-left">
+                    <h2 className="text-lg sm:text-xl font-black uppercase text-[#111]">METRICS</h2>
+                    <span className="text-[#111] font-bold md:hidden">{showMetrics ? '▼' : '▶'}</span>
+                </button>
+                <div className={`flex-1 metrics-grid bg-[#F5F0E8] ${showMetrics ? 'visible' : ''}`}>
+                      <MetricCell label="MAP50" value={metrics.map50} color="#FF4500" />
+                      <MetricCell label="PRECISION" value={metrics.precision} color="#00E5FF" />
+                      <MetricCell label="RECALL" value={metrics.recall} color="#FFE600" />
+                      <div className="metrics-cell flex flex-col justify-between bg-[#111111]">
+                         <span className="text-[9px] sm:text-[11px] font-bold text-[#555] uppercase tracking-[0.18em]">INFERENCE</span>
+                         <div className="flex items-end gap-1 leading-none">
+                           <span className="text-[28px] sm:text-[48px] font-black text-white">{metrics.inference}</span>
+                           <span className="pb-1 sm:pb-2 text-[12px] sm:text-[20px] font-bold text-white">ms</span>
+                         </div>
+                      </div>
+                </div>
+            </div>
+
+            {/* Detection Log Card - Hidden on mobile, visible on desktop */}
+            <div className="bg-[#F5F0E8] border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] flex flex-col flex-1 min-h-0 md:min-h-0 hidden md:flex">
+                <div className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#111111] flex justify-between items-center gap-2">
+                    <h2 className="text-sm sm:text-lg font-black text-[#FFE600] flex items-center gap-2">LOG</h2>
+                  <button type="button" className="log-copy-btn w-4 h-4 sm:w-5 sm:h-5" aria-label="Copy logs">
+                    <Copy size={16} strokeWidth={2.25} className="sm:w-full sm:h-full" style={{width: '16px', height: '16px'}} />
+                  </button>
+                </div>
+                <div className="flex-1 bg-[#0A0A0A] p-2 sm:p-3 overflow-y-auto font-mono text-[9px] sm:text-[12px] leading-tight text-[#00E5FF] space-y-1 sm:space-y-2 flex flex-col">
+                    {logs.map((log, i) => (
+                     <div key={i} className={`log-entry ${log.message.startsWith('├') || log.message.startsWith('└') ? 'pl-4' : 'border-l-2 pl-2 border-[#00E5FF]'} ${log.type === 'alert' ? (log.message.includes('ERROR') ? 'text-red-500 border-red-500' : 'text-[#00E5FF] border-[#FF4500]') : 'opacity-70'}`}>
+                             {!log.message.startsWith('├') && !log.message.startsWith('└') && <span className="text-gray-500 mr-2">[{log.time}]</span>}
+                             
+                             {/* Highlighting hack matching the backend log format */}
+                             {log.message.split('(CONF:').map((part, idx) => {
+                                 if (idx === 0) return <span key={idx}>{part}</span>;
+                                 const confVal = part.split(')')[0];
+                                 const color = parseFloat(confVal) > 0.9 ? 'text-green-500' : (parseFloat(confVal) > 0.7 ? 'text-[#FFE600]' : 'text-[#FF4500]');
+                                 return <span key={idx}>(CONF:<span className={color}>{confVal}</span>){part.split(')')[1]}</span>
+                             })}
+                         </div>
+                    ))}
+                    <div className="mt-auto pt-4 animate-pulse opacity-50">
+                        _ WAITING FOR STREAM...
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        {/* CONTROLS - Third on mobile (order-3), left on desktop (md:order-1) */}
+        <aside className="w-full md:w-[280px] flex flex-col md:h-full md:overflow-y-auto order-3 md:order-1">
+          <div className="bg-[#F5F0E8] border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] flex flex-col h-full">
+            <button type="button" onClick={() => setShowControls(!showControls)} className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#FFE600] hover:bg-[#FFD700] transition-colors flex justify-between items-center w-full text-left">
+                <h2 className="text-lg sm:text-xl font-black uppercase text-[#111]">CONTROLS</h2>
+                <span className="text-[#111] font-bold hidden lg:inline">─</span>
+                <span className="text-[#111] font-bold lg:hidden">{showControls ? '▼' : '▶'}</span>
+            </button>
+            {(showControls || typeof window === 'undefined' || window.innerWidth >= 768) && (
+            <div className="p-2 sm:p-4 flex flex-col gap-3 sm:gap-6 flex-1 bg-[#F5F0E8] overflow-y-auto pb-20 md:pb-4">
                 
                 <Slider label="CONFIDENCE THRESHOLD" value={confThreshold} onChange={setConfThreshold} colorHex="#00E5FF" />
                 <Slider label="IOU THRESHOLD" value={iouThreshold} onChange={setIouThreshold} colorHex="#FF4500" />
@@ -367,7 +479,8 @@ function App() {
                     </select>
                 </div>
 
-                <div className="mt-auto pt-2 sm:pt-4">
+                {/* Sticky Run Button - Always visible at bottom */}
+                <div className="md:mt-auto md:pt-4 md:pb-0 sticky bottom-0 left-0 right-0 bg-[#F5F0E8] pt-4 mt-auto md:static">
                     <button 
                         onClick={handleScan}
                         disabled={!file && !preview}
@@ -381,105 +494,7 @@ function App() {
                         <div className="w-full py-2 sm:py-4 text-xs sm:text-xl font-black uppercase border-2 border-[#111] bg-[#FF4500] opacity-50 cursor-not-allowed shadow-[4px_4px_0px_0px_#111] flex justify-center">▶ RUN <span className="hidden sm:inline">DETECTION</span></div>
                     )}
                 </div>
-            </div>
-          </div>
-        </aside>
-
-        {/* Center Column: Viewer */}
-        <section className="flex-1 flex flex-col lg:h-full min-w-0 min-h-[25vh] lg:min-h-0">
-            <div className="bg-[#F5F0E8] border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] flex flex-col h-full">
-                <div className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#FFE600] flex justify-between items-center gap-2">
-                    <h2 className="text-lg sm:text-xl font-black uppercase text-[#111] truncate">DETECTION VIEWER</h2>
-                    <div className="flex gap-1 flex-shrink-0">
-                    <button type="button" className="viewer-icon-btn w-6 h-6 sm:w-8 sm:h-8" aria-label="Zoom in"><ZoomIn size={14} strokeWidth={2.25} className="sm:w-full sm:h-full" style={{width: '16px', height: '16px'}} /></button>
-                    <button type="button" className="viewer-icon-btn w-6 h-6 sm:w-8 sm:h-8" aria-label="Zoom out"><ZoomOut size={14} strokeWidth={2.25} className="sm:w-full sm:h-full" style={{width: '16px', height: '16px'}} /></button>
-                    <button type="button" className="viewer-icon-btn w-6 h-6 sm:w-8 sm:h-8" aria-label="Fullscreen"><Maximize2 size={14} strokeWidth={2.25} className="sm:w-full sm:h-full" style={{width: '16px', height: '16px'}} /></button>
-                    </div>
-                </div>
-                {/* Main Image Area with Canvas Overlay */}
-                <div className="flex-1 bg-[#111111] relative m-1 sm:m-3 border-2 border-[#111] overflow-hidden flex items-center justify-center group">
-                    {preview ? (
-                         <div className="relative h-full w-full flex items-center justify-center">
-                             {/* Original Image */}
-                              <img 
-                                ref={imgRef} 
-                                src={preview} 
-                                alt="Upload Preview" 
-                                className="hidden" 
-                             />
-                             {/* Fullscreen Canvas mapping naturally to the image */}
-                             <canvas 
-                                ref={canvasRef} 
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-h-full max-w-full object-contain pointer-events-none" 
-                             />
-                         </div>
-                    ) : (
-                        <div className="text-[#00E5FF] opacity-50 flex flex-col items-center">
-                            <p className="text-xl font-bold uppercase border-2 border-[#00E5FF] p-4 bg-[#00E5FF]/10">AWAITING TARGET FEED</p>
-                        </div>
-                    )}
-                </div>
-                {/* Thumbnails Placeholder */}
-                <div className="h-16 sm:h-24 border-t-2 border-[#111] bg-[#FFB4A2]/50 p-2 sm:p-3 flex gap-2 sm:gap-3 overflow-x-auto">
-                    {preview && (
-                        <div className="h-full aspect-video bg-[#111] border-2 border-[#FF4500] relative cursor-pointer opacity-100 shadow-[3px_3px_0px_0px_#111] flex-shrink-0">
-                            <img src={preview} alt="Thumbnail 1" className="w-full h-full object-cover" />
-                        </div>
-                    )}
-                  <div className="thumbnail-overflow text-xs sm:text-base">
-                    <span>{uploadCount > 2 ? `+${uploadCount - 2}` : '...'}</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        {/* Right Column: Metrics & Log */}
-        <aside className="w-full lg:w-[280px] flex flex-col gap-2 sm:gap-4 lg:h-full lg:overflow-hidden max-h-[25vh] lg:max-h-none">
-            {/* Metrics Card */}
-            <div className="bg-[#F5F0E8] border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] flex flex-col shrink-0 lg:flex-[0.7]">
-                <div className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#FFE600]">
-                    <h2 className="text-lg sm:text-xl font-black uppercase text-[#111]">METRICS</h2>
-                </div>
-                <div className="flex-1 metrics-grid bg-[#F5F0E8]">
-                  <MetricCell label="MAP50" value={metrics.map50} color="#FF4500" />
-                  <MetricCell label="PRECISION" value={metrics.precision} color="#00E5FF" />
-                  <MetricCell label="RECALL" value={metrics.recall} color="#FFE600" />
-                  <div className="metrics-cell flex flex-col justify-between bg-[#111111]">
-                     <span className="text-[11px] font-bold text-[#555] uppercase tracking-[0.18em]">INFERENCE</span>
-                     <div className="flex items-end gap-1 leading-none">
-                       <span className="text-[48px] font-black text-white">{metrics.inference}</span>
-                       <span className="pb-2 text-[20px] font-bold text-white">ms</span>
-                     </div>
-                  </div>
-                </div>
-            </div>
-
-            {/* Detection Log Card */}
-            <div className="bg-[#F5F0E8] border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] flex flex-col flex-1 min-h-0 lg:min-h-0">
-                <div className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#111111] flex justify-between items-center gap-2">
-                    <h2 className="text-sm sm:text-lg font-black text-[#FFE600] flex items-center gap-2">LOG</h2>
-                  <button type="button" className="log-copy-btn w-4 h-4 sm:w-5 sm:h-5" aria-label="Copy logs">
-                    <Copy size={16} strokeWidth={2.25} className="sm:w-full sm:h-full" style={{width: '16px', height: '16px'}} />
-                  </button>
-                </div>
-                <div className="flex-1 bg-[#0A0A0A] p-2 sm:p-3 overflow-y-auto font-mono text-[9px] sm:text-[12px] leading-tight text-[#00E5FF] space-y-1 sm:space-y-2 flex flex-col">
-                    {logs.map((log, i) => (
-                     <div key={i} className={`log-entry ${log.message.startsWith('├') || log.message.startsWith('└') ? 'pl-4' : 'border-l-2 pl-2 border-[#00E5FF]'} ${log.type === 'alert' ? (log.message.includes('ERROR') ? 'text-red-500 border-red-500' : 'text-[#00E5FF] border-[#FF4500]') : 'opacity-70'}`}>
-                             {!log.message.startsWith('├') && !log.message.startsWith('└') && <span className="text-gray-500 mr-2">[{log.time}]</span>}
-                             
-                             {/* Highlighting hack matching the backend log format */}
-                             {log.message.split('(CONF:').map((part, idx) => {
-                                 if (idx === 0) return <span key={idx}>{part}</span>;
-                                 const confVal = part.split(')')[0];
-                                 const color = parseFloat(confVal) > 0.9 ? 'text-green-500' : (parseFloat(confVal) > 0.7 ? 'text-[#FFE600]' : 'text-[#FF4500]');
-                                 return <span key={idx}>(CONF:<span className={color}>{confVal}</span>){part.split(')')[1]}</span>
-                             })}
-                         </div>
-                    ))}
-                    <div className="mt-auto pt-4 animate-pulse opacity-50">
-                        _ WAITING FOR STREAM...
-                    </div>
-                </div>
+                      </div>
             </div>
         </aside>
 
