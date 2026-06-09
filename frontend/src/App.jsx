@@ -378,8 +378,8 @@ function App() {
                     </div>
                 )}
             </div>
-            {/* Thumbnails Placeholder */}
-            <div className="h-16 sm:h-24 border-t-2 border-[#111] bg-[#FFB4A2]/50 p-2 sm:p-3 flex gap-2 sm:gap-3 overflow-x-auto">
+            {/* Thumbnails Placeholder - Hidden on mobile */}
+            <div className="h-16 sm:h-24 border-t-2 border-[#111] bg-[#FFB4A2]/50 p-2 sm:p-3 flex gap-2 sm:gap-3 overflow-x-auto hidden md:flex">
                 {preview && (
                     <div className="h-full aspect-video bg-[#111] border-2 border-[#FF4500] relative cursor-pointer opacity-100 shadow-[3px_3px_0px_0px_#111] flex-shrink-0">
                         <img src={preview} alt="Thumbnail 1" className="w-full h-full object-cover" />
@@ -444,15 +444,15 @@ function App() {
         </aside>
 
         {/* CONTROLS - Third on mobile (order-3), left on desktop (md:order-1) */}
-        <aside className="w-full md:w-[280px] flex flex-col md:h-full md:overflow-y-auto order-3 md:order-1">
-          <div className="bg-[#F5F0E8] border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] flex flex-col h-full">
-            <button type="button" onClick={() => setShowControls(!showControls)} className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#FFE600] hover:bg-[#FFD700] transition-colors flex justify-between items-center w-full text-left">
+        <aside className="w-full md:w-[280px] flex flex-col md:h-full order-3 md:order-1">
+          <div className="bg-[#F5F0E8] border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] flex flex-col h-full md:overflow-y-auto">
+            <button type="button" onClick={() => setShowControls(!showControls)} className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#FFE600] hover:bg-[#FFD700] transition-colors flex justify-between items-center w-full text-left shrink-0">
                 <h2 className="text-lg sm:text-xl font-black uppercase text-[#111]">CONTROLS</h2>
                 <span className="text-[#111] font-bold hidden lg:inline">─</span>
                 <span className="text-[#111] font-bold lg:hidden">{showControls ? '▼' : '▶'}</span>
             </button>
             {(showControls || typeof window === 'undefined' || window.innerWidth >= 768) && (
-            <div className="p-2 sm:p-4 flex flex-col gap-3 sm:gap-6 flex-1 bg-[#F5F0E8] overflow-y-auto pb-20 md:pb-4">
+            <div className="p-2 sm:p-4 flex flex-col gap-3 sm:gap-6 flex-1 bg-[#F5F0E8] overflow-y-auto md:pb-0">
                 
                 <Slider label="CONFIDENCE THRESHOLD" value={confThreshold} onChange={setConfThreshold} colorHex="#00E5FF" />
                 <Slider label="IOU THRESHOLD" value={iouThreshold} onChange={setIouThreshold} colorHex="#FF4500" />
@@ -478,24 +478,21 @@ function App() {
                         <option value="YOLOV8-LARGE">YOLOV8-LARGE</option>
                     </select>
                 </div>
-
-                {/* Sticky Run Button - Always visible at bottom */}
-                <div className="md:mt-auto md:pt-4 md:pb-0 sticky bottom-0 left-0 right-0 bg-[#F5F0E8] pt-4 mt-auto md:static">
-                    <button 
-                        onClick={handleScan}
-                        disabled={!file && !preview}
-                        className={`w-full py-2 sm:py-4 text-xs sm:text-xl font-black uppercase border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] active:shadow-[1px_1px_0px_0px_#111] active:translate-y-[2px] flex items-center justify-center gap-2 transition-all ${
-                            loading ? 'bg-red-600 text-[#111] animate-pulse' : (!file && !preview ? 'bg-gray-400 text-gray-700 cursor-not-allowed hidden' : 'bg-[#FF4500] text-[#111]')
-                        }`}>
-                        {loading ? '■ STOP' : '▶ RUN'}
-                        <span className="hidden sm:inline">{loading ? 'DETECTION' : 'DETECTION'}</span>
-                    </button>
-                    {!file && !preview && (
-                        <div className="w-full py-2 sm:py-4 text-xs sm:text-xl font-black uppercase border-2 border-[#111] bg-[#FF4500] opacity-50 cursor-not-allowed shadow-[4px_4px_0px_0px_#111] flex justify-center">▶ RUN <span className="hidden sm:inline">DETECTION</span></div>
-                    )}
-                </div>
             </div>
             )}
+          </div>
+          
+          {/* Sticky Run Button - Outside the scrollable div, always visible at bottom on mobile */}
+          <div className="w-full md:hidden mt-2 sm:mt-4">
+              <button 
+                  onClick={handleScan}
+                  disabled={!file && !preview}
+                  className={`w-full py-2 sm:py-4 text-xs sm:text-xl font-black uppercase border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] active:shadow-[1px_1px_0px_0px_#111] active:translate-y-[2px] flex items-center justify-center gap-2 transition-all ${
+                      loading ? 'bg-red-600 text-[#111] animate-pulse' : (!file && !preview ? 'bg-gray-400 text-gray-700 cursor-not-allowed' : 'bg-[#FF4500] text-[#111]')
+                  }`}>
+                  {loading ? '■ STOP' : '▶ RUN'}
+                  <span className="hidden sm:inline">{loading ? 'DETECTION' : 'DETECTION'}</span>
+              </button>
           </div>
         </aside>
 
