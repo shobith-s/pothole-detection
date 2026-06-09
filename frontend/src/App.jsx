@@ -405,7 +405,10 @@ function App() {
         <aside className="w-full md:w-[280px] flex flex-col gap-2 sm:gap-4 md:h-full md:overflow-hidden order-2 md:order-3">
             {/* Metrics Card - Collapsible on mobile */}
             <div className="bg-[#F5F0E8] border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] flex flex-col shrink-0 lg:flex-[0.7]">
-                <button type="button" onClick={() => setShowMetrics(!showMetrics)} className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#FFE600] hover:bg-[#FFD700] transition-colors flex justify-between items-center w-full text-left">
+                <button type="button" onClick={() => {
+                    setShowMetrics(!showMetrics)
+                    if (!showMetrics) setShowControls(false)
+                }} className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#FFE600] hover:bg-[#FFD700] transition-colors flex justify-between items-center w-full text-left">
                     <h2 className="text-lg sm:text-xl font-black uppercase text-[#111]">METRICS</h2>
                     <span className="text-[#111] font-bold md:hidden">{showMetrics ? '▼' : '▶'}</span>
                 </button>
@@ -455,7 +458,10 @@ function App() {
         {/* CONTROLS - Third on mobile (order-3), left on desktop (md:order-1) */}
         <aside className="w-full md:w-[280px] flex flex-col md:h-full order-3 md:order-1 min-h-0">
           <div className="bg-[#F5F0E8] border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] flex flex-col h-full md:overflow-y-auto min-h-0">
-            <button type="button" onClick={() => setShowControls(!showControls)} className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#FFE600] hover:bg-[#FFD700] transition-colors flex justify-between items-center w-full text-left shrink-0">
+            <button type="button" onClick={() => {
+                setShowControls(!showControls)
+                if (!showControls) setShowMetrics(false)
+            }} className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#FFE600] hover:bg-[#FFD700] transition-colors flex justify-between items-center w-full text-left shrink-0">
                 <h2 className="text-lg sm:text-xl font-black uppercase text-[#111]">CONTROLS</h2>
                 <span className="text-[#111] font-bold hidden lg:inline">─</span>
                 <span className="text-[#111] font-bold lg:hidden">{showControls ? '▼' : '▶'}</span>
