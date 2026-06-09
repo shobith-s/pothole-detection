@@ -323,13 +323,22 @@ function App() {
             </span>
         </div>
         <div className="flex items-center gap-1 sm:gap-6 flex-shrink-0">
-            <div className="flex items-center gap-1 sm:gap-2 bg-[#222] px-2 sm:px-3 py-1 border-2 border-[#111] text-xs sm:text-sm">
+            <div className="flex items-center gap-1 sm:gap-2 bg-[#222] px-2 sm:px-3 py-1 border-2 border-[#111] text-xs sm:text-sm hidden sm:flex">
                 <div className="w-2 h-2 sm:w-3 sm:h-3 bg-[#00E5FF] animate-pulse flex-shrink-0"></div>
-                <span className="font-bold text-[#00E5FF] uppercase hidden sm:inline-block">SYSTEM ONLINE</span>
-                <span className="font-bold text-[#00E5FF] uppercase sm:hidden">ON</span>
+                <span className="font-bold text-[#00E5FF] uppercase">SYSTEM ONLINE</span>
             </div>
             
             <div className="hidden lg:block text-[#F5F0E8] font-bold text-xs tracking-widest whitespace-nowrap">{timeStr}</div>
+
+            {/* Run button on mobile only, beside Upload button */}
+            <button 
+                onClick={handleScan}
+                disabled={!file && !preview}
+                className={`md:hidden px-2 py-2 text-xs font-black uppercase border-2 border-[#111] shadow-[3px_3px_0px_0px_#111] active:shadow-[1px_1px_0px_0px_#111] active:translate-y-[2px] transition-all flex items-center gap-1 flex-shrink-0 ${
+                    loading ? 'bg-red-600 text-[#111] animate-pulse' : (!file && !preview ? 'bg-gray-400 text-gray-700 cursor-not-allowed' : 'bg-[#00E5FF] text-[#111]')
+                }`}>
+                {loading ? '■' : '▶'}
+            </button>
 
             <button 
                 onClick={triggerFileInput}
@@ -480,19 +489,6 @@ function App() {
                 </div>
             </div>
             )}
-          </div>
-          
-          {/* Sticky Run Button - Outside the scrollable div, always visible at bottom on mobile */}
-          <div className="w-full md:hidden mt-2 sm:mt-4">
-              <button 
-                  onClick={handleScan}
-                  disabled={!file && !preview}
-                  className={`w-full py-2 sm:py-4 text-xs sm:text-xl font-black uppercase border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] active:shadow-[1px_1px_0px_0px_#111] active:translate-y-[2px] flex items-center justify-center gap-2 transition-all ${
-                      loading ? 'bg-red-600 text-[#111] animate-pulse' : (!file && !preview ? 'bg-gray-400 text-gray-700 cursor-not-allowed' : 'bg-[#FF4500] text-[#111]')
-                  }`}>
-                  {loading ? '■ STOP' : '▶ RUN'}
-                  <span className="hidden sm:inline">{loading ? 'DETECTION' : 'DETECTION'}</span>
-              </button>
           </div>
         </aside>
 
