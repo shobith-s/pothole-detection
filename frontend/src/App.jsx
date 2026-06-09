@@ -334,7 +334,7 @@ function App() {
             <button 
                 onClick={handleScan}
                 disabled={!file && !preview}
-                className={`md:hidden w-8 h-8 text-xs font-black uppercase border-2 border-[#111] shadow-[3px_3px_0px_0px_#111] active:shadow-[1px_1px_0px_0px_#111] active:translate-y-[2px] transition-all flex items-center justify-center flex-shrink-0 ${
+                className={`md:hidden px-3 py-2 text-xs font-black uppercase border-2 border-[#111] shadow-[3px_3px_0px_0px_#111] active:shadow-[1px_1px_0px_0px_#111] active:translate-y-[2px] transition-all flex items-center justify-center flex-shrink-0 ${
                     loading ? 'bg-red-600 text-[#111] animate-pulse' : (!file && !preview ? 'bg-gray-400 text-gray-700 cursor-not-allowed' : 'bg-[#00E5FF] text-[#111]')
                 }`}>
                 {loading ? '■' : '▶'}
