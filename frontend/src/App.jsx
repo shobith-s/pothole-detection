@@ -334,7 +334,7 @@ function App() {
             <button 
                 onClick={handleScan}
                 disabled={!file && !preview}
-                className={`md:hidden px-2 py-2 text-xs font-black uppercase border-2 border-[#111] shadow-[3px_3px_0px_0px_#111] active:shadow-[1px_1px_0px_0px_#111] active:translate-y-[2px] transition-all flex items-center gap-1 flex-shrink-0 ${
+                className={`md:hidden w-8 h-8 text-xs font-black uppercase border-2 border-[#111] shadow-[3px_3px_0px_0px_#111] active:shadow-[1px_1px_0px_0px_#111] active:translate-y-[2px] transition-all flex items-center justify-center flex-shrink-0 ${
                     loading ? 'bg-red-600 text-[#111] animate-pulse' : (!file && !preview ? 'bg-gray-400 text-gray-700 cursor-not-allowed' : 'bg-[#00E5FF] text-[#111]')
                 }`}>
                 {loading ? '■' : '▶'}
@@ -351,7 +351,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col md:flex-row p-2 sm:p-4 gap-2 sm:gap-4 overflow-hidden bg-[#F5F0E8]">
+      <main className="flex-1 flex flex-col md:flex-row p-2 sm:p-4 gap-2 sm:gap-4 overflow-y-auto md:overflow-hidden bg-[#F5F0E8]">
         
         {/* VIEWER - First on mobile (order-1), center on desktop (lg:order-2) */}
         <section className="flex-1 flex flex-col md:order-2 h-auto md:h-full min-w-0 min-h-[35vh] md:min-h-0 order-1">
@@ -453,15 +453,15 @@ function App() {
         </aside>
 
         {/* CONTROLS - Third on mobile (order-3), left on desktop (md:order-1) */}
-        <aside className="w-full md:w-[280px] flex flex-col md:h-full order-3 md:order-1">
-          <div className="bg-[#F5F0E8] border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] flex flex-col h-full md:overflow-y-auto">
+        <aside className="w-full md:w-[280px] flex flex-col md:h-full order-3 md:order-1 min-h-0">
+          <div className="bg-[#F5F0E8] border-2 border-[#111] shadow-[4px_4px_0px_0px_#111] flex flex-col h-full md:overflow-y-auto min-h-0">
             <button type="button" onClick={() => setShowControls(!showControls)} className="border-b-2 border-[#111] p-2 sm:p-3 bg-[#FFE600] hover:bg-[#FFD700] transition-colors flex justify-between items-center w-full text-left shrink-0">
                 <h2 className="text-lg sm:text-xl font-black uppercase text-[#111]">CONTROLS</h2>
                 <span className="text-[#111] font-bold hidden lg:inline">─</span>
                 <span className="text-[#111] font-bold lg:hidden">{showControls ? '▼' : '▶'}</span>
             </button>
             {(showControls || typeof window === 'undefined' || window.innerWidth >= 768) && (
-            <div className="p-2 sm:p-4 flex flex-col gap-3 sm:gap-6 flex-1 bg-[#F5F0E8] overflow-y-auto md:pb-0">
+            <div className="p-2 sm:p-4 flex flex-col gap-3 sm:gap-6 flex-1 bg-[#F5F0E8] overflow-y-auto md:pb-0 min-h-0">
                 
                 <Slider label="CONFIDENCE THRESHOLD" value={confThreshold} onChange={setConfThreshold} colorHex="#00E5FF" />
                 <Slider label="IOU THRESHOLD" value={iouThreshold} onChange={setIouThreshold} colorHex="#FF4500" />
