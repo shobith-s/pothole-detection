@@ -43,56 +43,67 @@
     padding: 2px 8px;
     border: 2px solid #111;
     font-family: var(--font-sg);
-    font-size: 13px;
+    font-size: clamp(10px, 2vw, 13px);
     font-weight: 700;
     line-height: 1;
     text-align: center;
     white-space: nowrap;
   }
 
+  @media (max-width: 640px) {
+    .threshold-badge {
+      min-width: 40px;
+      padding: 1px 6px;
+      font-size: 10px;
+    }
+  }
+
   .slider-input {
     -webkit-appearance: none;
     appearance: none;
-    height: 16px;
+    height: clamp(12px, 3vw, 16px);
     border: 2px solid #111;
     outline: none;
     background-repeat: no-repeat;
+    cursor: pointer;
   }
 
   .slider-input::-webkit-slider-runnable-track {
-    height: 16px;
+    height: 100%;
     background: transparent;
   }
 
   .slider-input::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 16px;
-    height: 16px;
+    width: clamp(12px, 3vw, 16px);
+    height: clamp(12px, 3vw, 16px);
     border-radius: 9999px;
     background: var(--thumb-color, #111);
     border: none;
     box-shadow: none;
-    margin-top: -2px;
+    margin-top: -1px;
+    cursor: pointer;
   }
 
   .slider-input::-moz-range-track {
-    height: 16px;
+    height: 100%;
     background: transparent;
   }
 
   .slider-input::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
+    width: clamp(12px, 3vw, 16px);
+    height: clamp(12px, 3vw, 16px);
     border-radius: 9999px;
     background: var(--thumb-color, #111);
     border: none;
     box-shadow: none;
+    cursor: pointer;
   }
 
   .viewer-icon-btn {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     border: 2px solid #111;
     background: #F5F0E8;
     display: flex;
@@ -100,6 +111,15 @@
     justify-content: center;
     cursor: pointer;
     color: #111;
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  @media (min-width: 640px) {
+    .viewer-icon-btn {
+      width: 32px;
+      height: 32px;
+    }
   }
 
   .viewer-icon-btn:hover {
@@ -107,24 +127,49 @@
   }
 
   .metrics-grid {
-    display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
     border-left: 2px solid #111;
     border-top: 2px solid #111;
+    height: 100%;
+  }
+
+  @media (max-width: 767px) {
+    .metrics-grid {
+      display: none;
+    }
+    .metrics-grid.visible {
+      display: grid;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .metrics-grid {
+      display: grid;
+    }
   }
 
   .metrics-cell {
     border-right: 2px solid #111;
     border-bottom: 2px solid #111;
-    padding: 16px;
+    padding: clamp(8px, 3vw, 16px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 0;
+  }
+
+  @media (max-width: 640px) {
+    .metrics-cell {
+      padding: 8px;
+    }
   }
 
   .log-entry {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 11px;
+    font-size: clamp(8px, 2.5vw, 12px);
     line-height: 1.6;
   }
 
@@ -134,11 +179,12 @@
     background: #1a1a1a;
     z-index: 10;
     position: relative;
+    border-radius: 2px;
   }
 
   .log-copy-btn {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -147,6 +193,14 @@
     border: none;
     cursor: pointer;
     padding: 0;
+    flex-shrink: 0;
+  }
+
+  @media (min-width: 640px) {
+    .log-copy-btn {
+      width: 20px;
+      height: 20px;
+    }
   }
 
   .log-copy-btn:hover {
@@ -154,21 +208,37 @@
   }
 
   .thumbnail-overflow {
-    width: 80px;
-    height: 60px;
+    width: clamp(60px, 15vw, 80px);
+    height: clamp(45px, 12vw, 60px);
     border: 2px dashed #999;
     background: #e8e0d5;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: var(--font-sg);
-    font-size: 18px;
+    font-size: clamp(12px, 4vw, 18px);
     color: #999;
     cursor: pointer;
+    flex-shrink: 0;
   }
 
   .thumbnail-overflow:hover {
     border-color: #FF4500;
     color: #FF4500;
+  }
+
+  @media (max-width: 640px) {
+    .thumbnail-overflow {
+      width: 60px;
+      height: 45px;
+      font-size: 12px;
+    }
+  }
+
+  /* Show metrics grid on desktop (md:block won't work with grid display) */
+  @media (min-width: 768px) {
+    .metrics-grid[style*="display: none"] {
+      display: grid !important;
+    }
   }
 }
