@@ -494,8 +494,9 @@ function App() {
                         <div className="w-full py-2 sm:py-4 text-xs sm:text-xl font-black uppercase border-2 border-[#111] bg-[#FF4500] opacity-50 cursor-not-allowed shadow-[4px_4px_0px_0px_#111] flex justify-center">▶ RUN <span className="hidden sm:inline">DETECTION</span></div>
                     )}
                 </div>
-                      </div>
             </div>
+            )}
+          </div>
         </aside>
 
       </main>
